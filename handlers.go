@@ -7,6 +7,11 @@ import (
 
 // Getjwt handler, accessing it on  "/jwt": will outpu a token ==> header.payload.signature
 func GetJWT(w http.ResponseWriter, r *http.Request) {
+
+	/**** this supposed to be done by the user client
+	r.Header.Set("Api_key", "123456789")
+	****/
+
 	if r.Header.Get("Api_key") == app.APIKEY {
 		t, err := GetjwtToken(r)
 		if err != nil {
