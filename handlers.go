@@ -19,7 +19,6 @@ func GetJWT(w http.ResponseWriter, r *http.Request) {
 			w.Write([]byte("Access Denied"))
 			return
 		}
-		r.Header.Set("Token", t)
 		fmt.Fprint(w, t) // ==> t is: header.payload.signature
 	} else {
 		w.WriteHeader(http.StatusUnauthorized)
