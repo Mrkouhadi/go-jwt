@@ -19,6 +19,7 @@ func GetJWT(w http.ResponseWriter, r *http.Request) {
 			w.Write([]byte("Access Denied"))
 			return
 		}
+		r.Header.Set("Token", t)
 		fmt.Fprint(w, t) // ==> t is: header.payload.signature
 	} else {
 		w.WriteHeader(http.StatusUnauthorized)
@@ -29,6 +30,6 @@ func GetJWT(w http.ResponseWriter, r *http.Request) {
 // home handler, accessing it on "/", will result in access denied
 func Home(w http.ResponseWriter, r *http.Request) {
 	// GetJWT gives us a token and when the client takes that and put it in the header as  "Token" which the key...
-	// then the client will see the message below
-	w.Write([]byte("Hello world"))
+	// then the client will see the message below, cuz otherwise he will see "Access Denied"
+	w.Write([]byte("Secure Area"))
 }

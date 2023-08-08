@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 )
@@ -18,6 +19,6 @@ func main() {
 
 	http.Handle("/", ValidateJWT(Home))
 	http.HandleFunc("/jwt", GetJWT)
-
+	fmt.Println("Server started at http://localhost:8080")
 	http.ListenAndServe(":8080", nil)
 }
