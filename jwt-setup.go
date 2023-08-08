@@ -14,6 +14,9 @@ func CreateJWT() (string, error) {
 	token := jwt.New(jwt.SigningMethodHS256)
 	claims := token.Claims.(jwt.MapClaims) //claims is the second part of the token
 	claims["exp"] = time.Now().Add(time.Hour).Unix()
+	// just to show u that we're able to add custom var to claims
+	claims["userID"] = "hardcoded-ID"
+	// end of adding a custom value to claims, now we can retrieve it in ValidateJWT middleware
 	tokenStr, err := token.SignedString(app.Secret)
 	if err != nil {
 		fmt.Println(err.Error())

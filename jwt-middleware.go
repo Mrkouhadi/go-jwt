@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -23,6 +24,10 @@ func ValidateJWT(next func(w http.ResponseWriter, r *http.Request)) http.Handler
 				w.Write([]byte("Access Denied: " + err.Error()))
 			}
 			if token.Valid {
+				//this just to show that we can get the custom value added to claims in CreateJWT
+				claims := token.Claims.(jwt.MapClaims) // output: accountNumber of the user
+				fmt.Println("user id : ", claims["userID"])
+				// end getting the custom claims value
 				next(w, r)
 			}
 		} else {

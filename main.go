@@ -6,7 +6,7 @@ import (
 )
 
 /*
-* In order to get authorized: you need to put the api_key in the headers on postman
+* In order to get authorized: you need to put the Api_key in the headers on postman/or any client...
  */
 
 var app Config
