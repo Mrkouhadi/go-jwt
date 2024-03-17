@@ -1,36 +1,45 @@
 package main
 
 import (
-	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
 )
 
 func generateTokensHandler(w http.ResponseWriter, r *http.Request) {
-	// You may want to store the refresh token securely on the server for later use
-	w.Header().Set("Content-Type", "application/json")
 	//// Extract username from the request, validate credentials, etc. ////
 	var Person struct {
 		Email    string `json:"email"`
 		Password string `json:"password"`
 	}
-	err := json.NewDecoder(r.Body).Decode(&Person)
+	err := ReadJSON(w, r, &Person)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		ErrorJSON(w, err, http.StatusInternalServerError)
+		return
+	}
+	// compare credentials with Main database credentials
+	//
+	//
+	//
+	// if the credentials match what we have in the main DB we
+	// store them in memory (REDIS) as follows:
+	err = WriteCredentials(client, Person.Email, Person.Password)
+	if err != nil {
+		ErrorJSON(w, err, http.StatusInternalServerError)
 		return
 	}
 	// Create access token
 	accessToken, err := createToken(Person.Password, Person.Email, accessTokenExp)
 	if err != nil {
-		http.Error(w, "Error creating access token", http.StatusInternalServerError)
+		ErrorJSON(w, err, http.StatusInternalServerError)
 		return
 	}
 
 	// Create refresh token
 	refreshToken, err := createToken(Person.Password, Person.Email, refreshTokenExp)
 	if err != nil {
-		http.Error(w, "Error creating refresh token", http.StatusInternalServerError)
+		ErrorJSON(w, err, http.StatusInternalServerError)
 		return
 	}
 
@@ -65,54 +74,61 @@ func generateTokensHandler(w http.ResponseWriter, r *http.Request) {
 
 	secKey, err := getSecKey()
 	if err != nil {
-		log.Fatal(err)
+		ErrorJSON(w, err, http.StatusInternalServerError)
+		return
 	}
 	// Set each cookie
 	for _, cookie := range cookies {
 		// Use the WriteSigned() function, passing in the secret key as the final argument
 		err := WriteEncrypted(w, cookie, secKey)
 		if err != nil {
-			http.Error(w, "server error", http.StatusInternalServerError)
+			ErrorJSON(w, err, http.StatusInternalServerError)
 			return
 		}
 	}
 	// send all tokens in a json format to the UI
-	json.NewEncoder(w).Encode(response)
+	payload := JsonResponse{
+		Error:   false,
+		Message: fmt.Sprintf("Logged in user %s", Person.Email),
+		Data:    response,
+	}
+	WriteJSON(w, http.StatusAccepted, payload)
 }
 
 func refreshTokenHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	// extracting the refresh token from the cookie(httpOnly cookie)
 	secKey, err := getSecKey()
 	if err != nil {
 		log.Fatal(err)
 	}
 	value, err := ReadEncrypted(r, "refresh_token", secKey)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		ErrorJSON(w, err, http.StatusBadRequest)
 		return
 	}
 	// Validate the refresh token
 	validToken, err := validateToken(value)
 	if err != nil {
-		http.Error(w, "Invalid refresh token", http.StatusUnauthorized)
+		ErrorJSON(w, err, http.StatusUnauthorized)
 		return
 	}
 	// Access claims from the token
 	claims, ok := validToken.Claims.(*Claims)
 	if !ok {
-		http.Error(w, "Error getting claims from token", http.StatusInternalServerError)
+		ErrorJSON(w, err, http.StatusInternalServerError)
 		return
 	}
 	// Check if the refresh token is expired
-	if time.Until(time.Unix(claims.ExpiresAt, 0)) <= 0 {
-		http.Error(w, "Refresh token has been expired", http.StatusUnauthorized)
+	expiresAtUnix := claims.ExpiresAt.Time.Unix()
+
+	// if time.Until(time.Unix(claims.ExpiresAt, 0)) <= 0 {
+	if time.Now().Unix() >= expiresAtUnix {
+		ErrorJSON(w, err, http.StatusUnauthorized)
 		return
 	}
 	// Create a new access token
 	newAccessToken, err := createToken(claims.Password, claims.Email, accessTokenExp)
 	if err != nil {
-		http.Error(w, "Error creating new access token", http.StatusInternalServerError)
+		ErrorJSON(w, err, http.StatusInternalServerError)
 		return
 	}
 	// Send the new access token as JSON response
@@ -120,7 +136,6 @@ func refreshTokenHandler(w http.ResponseWriter, r *http.Request) {
 		"access_token":  newAccessToken,
 		"refresh_token": value,
 	}
-
 	// UPDATE the access token in the cookie
 	NewAccTokenCookie := http.Cookie{
 		Name:     "access_token",
@@ -133,11 +148,11 @@ func refreshTokenHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	err = WriteEncrypted(w, NewAccTokenCookie, secKey)
 	if err != nil {
-		http.Error(w, "server error", http.StatusInternalServerError)
+		ErrorJSON(w, err, http.StatusInternalServerError)
 		return
 	}
 	// send json data to the UI
-	json.NewEncoder(w).Encode(response)
+	WriteJSON(w, http.StatusAccepted, response)
 }
 
 func Logout(w http.ResponseWriter, r *http.Request) {
@@ -163,5 +178,6 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 	for _, deletedCookie := range deletedCookies {
 		http.SetCookie(w, &deletedCookie)
 	}
+	// redirect the user
 	http.Redirect(w, r, "/", http.StatusFound)
 }

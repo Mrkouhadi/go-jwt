@@ -8,22 +8,22 @@ import (
 
 const (
 	secretKey       = "Fd~+?/-S@c?ret99~~!!~~8R-Fr5?>?" // very secret
-	accessTokenExp  = time.Minute * 15                  // 15 minutes
-	refreshTokenExp = time.Hour * 24 * 7                // 7 days
+	accessTokenExp  = time.Minute * 1                   //FIXME:            // 60 minutes
+	refreshTokenExp = time.Hour * 24 * 30               // 30 days
 )
 
 type Claims struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
-	jwt.StandardClaims
+	jwt.RegisteredClaims
 }
 
 func createToken(password, email string, expiration time.Duration) (string, error) {
 	claims := &Claims{
 		Email:    email,
 		Password: password,
-		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(expiration).Unix(),
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(expiration)),
 		},
 	}
 
@@ -39,10 +39,8 @@ func validateToken(tokenString string) (*jwt.Token, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
 		return []byte(secretKey), nil
 	})
-
 	if err != nil {
 		return nil, err
 	}
-
 	return token, nil
 }
