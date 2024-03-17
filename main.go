@@ -9,6 +9,8 @@ import (
 	"github.com/go-chi/cors"
 )
 
+var client = NewRedisClient()
+
 func main() {
 
 	r := chi.NewRouter()
@@ -41,10 +43,14 @@ func main() {
 	r.Route("/protected", func(mux chi.Router) {
 		mux.Use(Auth)
 		mux.Get("/user", func(w http.ResponseWriter, r *http.Request) { // protected/user
-			w.Write([]byte("User Profile"))
+			pass, err := ReadCredentials(client, "bryan@kouhadi.com")
+			if err != nil {
+				fmt.Println("error reading redis data in /protected/user: ", err)
+			}
+			fmt.Println("passs: ", pass)
+			w.Write([]byte("User Profile-  password: " + pass))
 		})
 	})
-	// running the server
 	fmt.Println("Server running on :8080")
 	http.ListenAndServe(":8080", r)
 }
