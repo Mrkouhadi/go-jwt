@@ -29,6 +29,7 @@ func generateTokensHandler(w http.ResponseWriter, r *http.Request) {
 		ErrorJSON(w, err, http.StatusInternalServerError)
 		return
 	}
+
 	// Create access token
 	accessToken, err := createToken(Person.Password, Person.Email, accessTokenExp)
 	if err != nil {
@@ -57,8 +58,8 @@ func generateTokensHandler(w http.ResponseWriter, r *http.Request) {
 			Value:    accessToken,
 			HttpOnly: true,
 			// Secure:   true,
-			Path:   "/",
-			MaxAge: 3600,
+			Path:     "/",
+			MaxAge:   3600,
 			SameSite: http.SameSiteLaxMode,
 		},
 		{
@@ -66,8 +67,8 @@ func generateTokensHandler(w http.ResponseWriter, r *http.Request) {
 			Value:    refreshToken,
 			HttpOnly: true,
 			// Secure:   true,
-			Path:   "/",
-			MaxAge: 3600,
+			Path:     "/",
+			MaxAge:   3600,
 			SameSite: http.SameSiteLaxMode,
 		},
 	}
@@ -85,7 +86,6 @@ func generateTokensHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	
 	// send all tokens in a json format to the UI
 	payload := JsonResponse{
 		Error:   false,
