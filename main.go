@@ -12,14 +12,12 @@ import (
 var client = NewRedisClient()
 
 func main() {
-
 	r := chi.NewRouter()
 	// A good base middleware stack
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
-
 	// Basic CORS
 	r.Use(cors.Handler(cors.Options{
 		// AllowedOrigins: []string{"http://foo.com"}, // Use this to allow specific origin hosts
@@ -31,14 +29,12 @@ func main() {
 		AllowCredentials: true,
 		MaxAge:           300, // Maximum value not ignored by any of major browsers
 	}))
-
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) { // protected/user
 		w.Write([]byte("HOME PAGE"))
 	})
 	r.Get("/refresh-token", refreshTokenHandler) // get new access token using the refresh token
 	r.Get("/logout", Logout)
 	r.Post("/generate-tokens", generateTokensHandler) // get 2 tokens: access + refresh
-
 	// protected routes
 	r.Route("/protected", func(mux chi.Router) {
 		mux.Use(Auth)

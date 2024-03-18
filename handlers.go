@@ -18,11 +18,11 @@ func generateTokensHandler(w http.ResponseWriter, r *http.Request) {
 		ErrorJSON(w, err, http.StatusInternalServerError)
 		return
 	}
-	// compare credentials with Main database credentials
+	// compare credentials with Main database data.
 	//
 	//
 	//
-	// if the credentials match what we have in the main DB we
+	// if the credentials match what we have in the main database we
 	// store them in memory (REDIS) as follows:
 	err = WriteCredentials(client, Person.Email, Person.Password)
 	if err != nil {
@@ -119,8 +119,6 @@ func refreshTokenHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	// Check if the refresh token is expired
 	expiresAtUnix := claims.ExpiresAt.Time.Unix()
-
-	// if time.Until(time.Unix(claims.ExpiresAt, 0)) <= 0 {
 	if time.Now().Unix() >= expiresAtUnix {
 		ErrorJSON(w, err, http.StatusUnauthorized)
 		return
@@ -160,6 +158,7 @@ func refreshTokenHandler(w http.ResponseWriter, r *http.Request) {
 	WriteJSON(w, http.StatusAccepted, payload)
 }
 
+// LOGOUT: handler for logging out by deleting all tokesn from cookies, and remove redis credentials
 func Logout(w http.ResponseWriter, r *http.Request) {
 	// Create a new cookie with the same name as the one you want to delete
 	// and set its expiration time to a time in the past (e.g., one hour ago).
