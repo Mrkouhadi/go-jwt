@@ -23,7 +23,7 @@ func main() {
 	// Basic CORS
 	r.Use(cors.Handler(cors.Options{
 		// AllowedOrigins: []string{"http://foo.com"}, // Use this to allow specific origin hosts
-		AllowedOrigins: []string{"https://*", "http://*"},
+		AllowedOrigins: []string{"https://*", "http://*", "http://localhost:3000"},
 		// AllowOriginFunc:  func(r *http.Request, origin string) bool { return true },
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
@@ -35,20 +35,15 @@ func main() {
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) { // protected/user
 		w.Write([]byte("HOME PAGE"))
 	})
-	r.Post("/generate-tokens", generateTokensHandler) // get 2 tokens: access + refresh
-	r.Get("/refresh-token", refreshTokenHandler)      // get new access token using the refresh token
+	r.Get("/refresh-token", refreshTokenHandler) // get new access token using the refresh token
 	r.Get("/logout", Logout)
+	r.Post("/generate-tokens", generateTokensHandler) // get 2 tokens: access + refresh
 
 	// protected routes
 	r.Route("/protected", func(mux chi.Router) {
 		mux.Use(Auth)
 		mux.Get("/user", func(w http.ResponseWriter, r *http.Request) { // protected/user
-			pass, err := ReadCredentials(client, "bryan@kouhadi.com")
-			if err != nil {
-				fmt.Println("error reading redis data in /protected/user: ", err)
-			}
-			fmt.Println("passs: ", pass)
-			w.Write([]byte("User Profile-  password: " + pass))
+			w.Write([]byte("User Profile Page"))
 		})
 	})
 	fmt.Println("Server running on :8080")

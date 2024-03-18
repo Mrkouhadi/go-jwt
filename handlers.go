@@ -57,8 +57,8 @@ func generateTokensHandler(w http.ResponseWriter, r *http.Request) {
 			Value:    accessToken,
 			HttpOnly: true,
 			// Secure:   true,
-			Path:     "/",
-			MaxAge:   3600,
+			Path:   "/",
+			MaxAge: 3600,
 			SameSite: http.SameSiteLaxMode,
 		},
 		{
@@ -66,8 +66,8 @@ func generateTokensHandler(w http.ResponseWriter, r *http.Request) {
 			Value:    refreshToken,
 			HttpOnly: true,
 			// Secure:   true,
-			Path:     "/",
-			MaxAge:   3600,
+			Path:   "/",
+			MaxAge: 3600,
 			SameSite: http.SameSiteLaxMode,
 		},
 	}
@@ -79,13 +79,13 @@ func generateTokensHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	// Set each cookie
 	for _, cookie := range cookies {
-		// Use the WriteSigned() function, passing in the secret key as the final argument
 		err := WriteEncrypted(w, cookie, secKey)
 		if err != nil {
 			ErrorJSON(w, err, http.StatusInternalServerError)
 			return
 		}
 	}
+	
 	// send all tokens in a json format to the UI
 	payload := JsonResponse{
 		Error:   false,
@@ -152,7 +152,12 @@ func refreshTokenHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// send json data to the UI
-	WriteJSON(w, http.StatusAccepted, response)
+	payload := JsonResponse{
+		Error:   false,
+		Message: fmt.Sprintf("Logged in user %s", claims.Email),
+		Data:    response,
+	}
+	WriteJSON(w, http.StatusAccepted, payload)
 }
 
 func Logout(w http.ResponseWriter, r *http.Request) {
