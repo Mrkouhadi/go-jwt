@@ -9,8 +9,6 @@ import (
 	"github.com/go-chi/cors"
 )
 
-var client = NewRedisClient()
-
 func main() {
 	r := chi.NewRouter()
 	// A good base middleware stack

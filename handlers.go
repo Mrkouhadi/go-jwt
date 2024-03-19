@@ -7,6 +7,7 @@ import (
 	"time"
 )
 
+// generateTokensHandler represents LOGIN handler in real world scenario
 func generateTokensHandler(w http.ResponseWriter, r *http.Request) {
 	//// Extract username from the request, validate credentials, etc. ////
 	var Person struct {
@@ -18,39 +19,32 @@ func generateTokensHandler(w http.ResponseWriter, r *http.Request) {
 		ErrorJSON(w, err, http.StatusInternalServerError)
 		return
 	}
-	// compare credentials with Main database data.
+	//// compare credentials with Main database data.
 	//
 	//
 	//
-	// if the credentials match what we have in the main database we
-	// store them in memory (REDIS) as follows:
-	err = WriteCredentials(client, Person.Email, Person.Password)
-	if err != nil {
-		ErrorJSON(w, err, http.StatusInternalServerError)
-		return
-	}
-
-	// Create access token
+	//// if the credentials match what we have in the main database we issue the Tokens
+	//// Create an access token
 	accessToken, err := createToken(Person.Password, Person.Email, accessTokenExp)
 	if err != nil {
 		ErrorJSON(w, err, http.StatusInternalServerError)
 		return
 	}
 
-	// Create refresh token
+	//// Create a refresh token
 	refreshToken, err := createToken(Person.Password, Person.Email, refreshTokenExp)
 	if err != nil {
 		ErrorJSON(w, err, http.StatusInternalServerError)
 		return
 	}
 
-	// Send tokens as JSON response
+	//// Send tokens as JSON response
 	response := map[string]string{
 		"access_token":  accessToken,
 		"refresh_token": refreshToken,
 	}
 
-	/// storing the tokens in cookies
+	//// storing the tokens in cookies
 	// Create multiple cookies
 	cookies := []http.Cookie{
 		{
@@ -72,7 +66,7 @@ func generateTokensHandler(w http.ResponseWriter, r *http.Request) {
 			SameSite: http.SameSiteLaxMode,
 		},
 	}
-
+	// get the secret key
 	secKey, err := getSecKey()
 	if err != nil {
 		ErrorJSON(w, err, http.StatusInternalServerError)
@@ -86,7 +80,7 @@ func generateTokensHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	// send all tokens in a json format to the UI
+	//// send all tokens in a json format to the UI
 	payload := JsonResponse{
 		Error:   false,
 		Message: fmt.Sprintf("Logged in user %s", Person.Email),
