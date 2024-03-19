@@ -8,8 +8,8 @@ import (
 
 const (
 	secretKey       = "Fd~+?/-S@c?ret99~~!!~~8R-Fr5?>?" // very secret
-	accessTokenExp  = time.Minute * 1                   //FIXME:            // 60 minutes
-	refreshTokenExp = time.Hour * 24 * 30               // 30 days
+	accessTokenExp  = time.Minute * 15                  //FIXME: make it 30 minutes
+	refreshTokenExp = time.Hour * 24 * 7                // 7 days
 )
 
 type Claims struct {

@@ -1,9 +1,10 @@
 package main
 
 import (
-	"errors"
+	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 	"time"
 )
 
@@ -22,7 +23,8 @@ func Auth(next http.Handler) http.Handler {
 		//// Validate the access token
 		validToken, err := validateToken(value)
 		if err != nil || !validToken.Valid {
-			ErrorJSON(w, err, http.StatusUnauthorized)
+			redirectURL := fmt.Sprintf("/refresh-token?redirect=%s", url.QueryEscape(r.URL.Path))
+			http.Redirect(w, r, redirectURL, http.StatusTemporaryRedirect)
 			return
 		}
 		//// Access claims from the token
@@ -31,10 +33,11 @@ func Auth(next http.Handler) http.Handler {
 			ErrorJSON(w, err, http.StatusUnauthorized)
 			return
 		}
-		//// Check if the access token is expired
+		//// Check if the token is expired
 		expiresAtUnix := claims.ExpiresAt.Time.Unix()
 		if time.Now().Unix() >= expiresAtUnix {
-			ErrorJSON(w, errors.New("access token is expired"), http.StatusUnauthorized)
+			redirectURL := fmt.Sprintf("/refresh-token?redirect=%s", url.QueryEscape(r.URL.Path))
+			http.Redirect(w, r, redirectURL, http.StatusTemporaryRedirect)
 			return
 		}
 		next.ServeHTTP(w, r)

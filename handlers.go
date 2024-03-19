@@ -38,12 +38,6 @@ func generateTokensHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//// Send tokens as JSON response
-	response := map[string]string{
-		"access_token":  accessToken,
-		"refresh_token": refreshToken,
-	}
-
 	//// storing the tokens in cookies
 	// Create multiple cookies
 	cookies := []http.Cookie{
@@ -84,7 +78,6 @@ func generateTokensHandler(w http.ResponseWriter, r *http.Request) {
 	payload := JsonResponse{
 		Error:   false,
 		Message: fmt.Sprintf("Logged in user %s", Person.Email),
-		Data:    response,
 	}
 	WriteJSON(w, http.StatusAccepted, payload)
 }
@@ -123,11 +116,7 @@ func refreshTokenHandler(w http.ResponseWriter, r *http.Request) {
 		ErrorJSON(w, err, http.StatusInternalServerError)
 		return
 	}
-	// Send the new access token as JSON response
-	response := map[string]string{
-		"access_token":  newAccessToken,
-		"refresh_token": value,
-	}
+
 	// UPDATE the access token in the cookie
 	NewAccTokenCookie := http.Cookie{
 		Name:     "access_token",
@@ -143,13 +132,13 @@ func refreshTokenHandler(w http.ResponseWriter, r *http.Request) {
 		ErrorJSON(w, err, http.StatusInternalServerError)
 		return
 	}
-	// send json data to the UI
-	payload := JsonResponse{
-		Error:   false,
-		Message: fmt.Sprintf("Logged in user %s", claims.Email),
-		Data:    response,
+	//// REDIRECT THE USER BACK TO THE ORIGINAL LINK
+	redirectURL := r.URL.Query().Get("redirect")
+	if redirectURL == "" {
+		// If no redirect URL is provided, redirect to a default URL
+		redirectURL = "/"
 	}
-	WriteJSON(w, http.StatusAccepted, payload)
+	http.Redirect(w, r, redirectURL, http.StatusTemporaryRedirect)
 }
 
 // LOGOUT: handler for logging out by deleting all tokesn from cookies, and remove redis credentials
