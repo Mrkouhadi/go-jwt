@@ -55,7 +55,6 @@ export default function Home() {
         setData(data.data)
         console.log(data)
       })
-      // Handle any errors
       .catch(function (err) {
         console.log(
           "Unable to fetch -",
