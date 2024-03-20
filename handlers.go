@@ -19,20 +19,22 @@ func generateTokensHandler(w http.ResponseWriter, r *http.Request) {
 		ErrorJSON(w, err, http.StatusInternalServerError)
 		return
 	}
-	//// compare credentials with Main database data.
+	//// compare credentials with database data.
 	//
 	//
 	//
-	//// if the credentials match what we have in the main database we issue the Tokens
+	//// if the credentials match what we have in the database we issue the Tokens
 	//// Create an access token
-	accessToken, err := createToken(Person.Password, Person.Email, accessTokenExp)
+	userid := "id_ftdrs42671hdcn" // get it from the database
+	email := Person.Email
+	accessToken, err := createToken(userid, email, accessTokenExp)
 	if err != nil {
 		ErrorJSON(w, err, http.StatusInternalServerError)
 		return
 	}
 
 	//// Create a refresh token
-	refreshToken, err := createToken(Person.Password, Person.Email, refreshTokenExp)
+	refreshToken, err := createToken(userid, email, refreshTokenExp)
 	if err != nil {
 		ErrorJSON(w, err, http.StatusInternalServerError)
 		return
@@ -77,7 +79,7 @@ func generateTokensHandler(w http.ResponseWriter, r *http.Request) {
 	//// send all tokens in a json format to the UI
 	payload := JsonResponse{
 		Error:   false,
-		Message: fmt.Sprintf("Logged in user %s", Person.Email),
+		Message: fmt.Sprintf("Loggedin user of email %s and ID: %s", email, userid),
 	}
 	WriteJSON(w, http.StatusAccepted, payload)
 }
@@ -111,7 +113,7 @@ func refreshTokenHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// Create a new access token
-	newAccessToken, err := createToken(claims.Password, claims.Email, accessTokenExp)
+	newAccessToken, err := createToken(claims.UserID, claims.Email, accessTokenExp)
 	if err != nil {
 		ErrorJSON(w, err, http.StatusInternalServerError)
 		return

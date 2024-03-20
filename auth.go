@@ -8,20 +8,21 @@ import (
 
 const (
 	secretKey       = "Fd~+?/-S@c?ret99~~!!~~8R-Fr5?>?" // very secret
-	accessTokenExp  = time.Minute * 15                  //FIXME: make it 30 minutes
+	accessTokenExp  = time.Minute * 15                  //FIXME: make it 15 minutes
 	refreshTokenExp = time.Hour * 24 * 7                // 7 days
 )
 
 type Claims struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
+	Email  string `json:"email"`
+	UserID string `json:"userid"`
+	Role   string `json:"role"`
 	jwt.RegisteredClaims
 }
 
-func createToken(password, email string, expiration time.Duration) (string, error) {
+func createToken(userid, email string, expiration time.Duration) (string, error) {
 	claims := &Claims{
-		Email:    email,
-		Password: password,
+		Email:  email,
+		UserID: userid,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(expiration)),
 		},

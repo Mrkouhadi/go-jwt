@@ -2,7 +2,9 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
+	"net/url"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -10,6 +12,7 @@ import (
 )
 
 func main() {
+
 	r := chi.NewRouter()
 	// A good base middleware stack
 	r.Use(middleware.RequestID)
@@ -30,6 +33,7 @@ func main() {
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) { // protected/user
 		w.Write([]byte("HOME PAGE"))
 	})
+	// authentication endpoints
 	r.Get("/refresh-token", refreshTokenHandler) // get new access token using the refresh token
 	r.Get("/logout", Logout)
 	r.Post("/generate-tokens", generateTokensHandler) // get 2 tokens: access + refresh
@@ -37,7 +41,34 @@ func main() {
 	r.Route("/protected", func(mux chi.Router) {
 		mux.Use(Auth)
 		mux.Get("/user", func(w http.ResponseWriter, r *http.Request) { // protected/user
-			w.Write([]byte("User Profile Page"))
+			secKey, err := getSecKey()
+			if err != nil {
+				log.Fatal(err)
+			}
+			value, err := ReadEncrypted(r, "refresh_token", secKey)
+			if err != nil {
+				ErrorJSON(w, err, http.StatusBadRequest)
+				return
+			}
+			//// Validate the access token
+			validToken, err := validateToken(value)
+			if err != nil || !validToken.Valid {
+				redirectURL := fmt.Sprintf("/refresh-token?redirect=%s", url.QueryEscape(r.URL.Path))
+				http.Redirect(w, r, redirectURL, http.StatusTemporaryRedirect)
+				return
+			}
+			//// Access claims from the token
+			claims, ok := validToken.Claims.(*Claims)
+			if !ok {
+				ErrorJSON(w, err, http.StatusUnauthorized)
+				return
+			}
+			//// send all tokens in a json format to the UI
+			payload := JsonResponse{
+				Error:   false,
+				Message: fmt.Sprintf("Loggedin user of email %s and ID: %s", claims.Email, claims.UserID),
+			}
+			WriteJSON(w, http.StatusAccepted, payload)
 		})
 	})
 	fmt.Println("Server running on :8080")
