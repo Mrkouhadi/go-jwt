@@ -1,4 +1,4 @@
-module go-jwt-chatgpt
+module go-jwt
 
 go 1.21.5
 

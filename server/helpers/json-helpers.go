@@ -1,4 +1,4 @@
-package main
+package helpers
 
 import (
 	"encoding/json"
@@ -6,6 +6,8 @@ import (
 	"io"
 	"net/http"
 )
+
+// /////////////////////////////////////// JSON /////////////////////////////////
 
 type JsonResponse struct {
 	Error   bool        `json:"error"`

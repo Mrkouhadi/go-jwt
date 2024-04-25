@@ -1,4 +1,4 @@
-package main
+package auth
 
 import (
 	"crypto/aes"
@@ -9,7 +9,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"strings"
 )
@@ -21,10 +20,10 @@ var (
 	ErrInvalidValue = errors.New("invalid cookie value")
 )
 
-func getSecKey() ([]byte, error) {
+func GetSecKey() ([]byte, error) {
 	secKey, err := hex.DecodeString("13d6b4dff8f84a10851021ec8608f814570d562c92fe6b5ec4c9f595bcb3234b")
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 	return secKey, nil
 }

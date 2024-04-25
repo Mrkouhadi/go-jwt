@@ -1,42 +1,50 @@
-package main
+package handlers
 
 import (
 	"fmt"
-	"log"
+	"go-jwt/auth"
+	"go-jwt/helpers"
 	"net/http"
 	"time"
 )
 
 // generateTokensHandler represents LOGIN handler in real world scenario
-func generateTokensHandler(w http.ResponseWriter, r *http.Request) {
+func (m *Repository) GenerateTokensHandler(w http.ResponseWriter, r *http.Request) {
 	//// Extract username from the request, validate credentials, etc. ////
 	var Person struct {
 		Email    string `json:"email"`
 		Password string `json:"password"`
 	}
-	err := ReadJSON(w, r, &Person)
+	err := helpers.ReadJSON(w, r, &Person)
 	if err != nil {
-		ErrorJSON(w, err, http.StatusInternalServerError)
+		helpers.ErrorJSON(w, err, http.StatusInternalServerError)
 		return
 	}
-	//// compare credentials with database data.
+	//// compare credentials against database data.
 	//
 	//
 	//
-	//// if the credentials match what we have in the database we issue the Tokens
+	//// if the credentials match what we have in the database we continue
 	//// Create an access token
 	userid := "id_ftdrs42671hdcn" // get it from the database
+	username := "bryan kouhadi"
 	email := Person.Email
-	accessToken, err := createToken(userid, email, accessTokenExp)
+	role := "user"
+	accessToken, err := auth.CreateToken(userid, username, email, role, m.App.Auth.AccessTokenExp)
 	if err != nil {
-		ErrorJSON(w, err, http.StatusInternalServerError)
+		helpers.ErrorJSON(w, err, http.StatusInternalServerError)
 		return
 	}
+	// persist data in memory
+	m.App.Auth.UserData.Email = Person.Email
+	m.App.Auth.UserData.UserID = userid
+	m.App.Auth.UserData.Role = role
+	m.App.Auth.UserData.Username = username
 
 	//// Create a refresh token
-	refreshToken, err := createToken(userid, email, refreshTokenExp)
+	refreshToken, err := auth.CreateToken(userid, username, email, role, m.App.Auth.RefreshTokenExp)
 	if err != nil {
-		ErrorJSON(w, err, http.StatusInternalServerError)
+		helpers.ErrorJSON(w, err, http.StatusInternalServerError)
 		return
 	}
 
@@ -63,59 +71,61 @@ func generateTokensHandler(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 	// get the secret key
-	secKey, err := getSecKey()
+	secKey, err := auth.GetSecKey()
 	if err != nil {
-		ErrorJSON(w, err, http.StatusInternalServerError)
+		helpers.ErrorJSON(w, err, http.StatusInternalServerError)
 		return
 	}
 	// Set each cookie
 	for _, cookie := range cookies {
-		err := WriteEncrypted(w, cookie, secKey)
+		err := auth.WriteEncrypted(w, cookie, secKey)
 		if err != nil {
-			ErrorJSON(w, err, http.StatusInternalServerError)
+			helpers.ErrorJSON(w, err, http.StatusInternalServerError)
 			return
 		}
 	}
 	//// send all tokens in a json format to the UI
-	payload := JsonResponse{
+	//// send all tokens in a json format to the UI
+	payload := helpers.JsonResponse{
 		Error:   false,
-		Message: fmt.Sprintf("Loggedin user of email %s and ID: %s", email, userid),
+		Message: fmt.Sprintf("Loggedin user of email %s and Username: %s", m.App.Auth.UserData.Email, m.App.Auth.UserData.Username),
 	}
-	WriteJSON(w, http.StatusAccepted, payload)
+	helpers.WriteJSON(w, http.StatusAccepted, payload)
 }
 
-func refreshTokenHandler(w http.ResponseWriter, r *http.Request) {
-	secKey, err := getSecKey()
+// RefreshTokenHandler refreshes the raccess token
+func (m *Repository) RefreshTokenHandler(w http.ResponseWriter, r *http.Request) {
+	secKey, err := auth.GetSecKey()
 	if err != nil {
-		log.Fatal(err)
+		helpers.ErrorJSON(w, err, http.StatusBadRequest)
 	}
-	value, err := ReadEncrypted(r, "refresh_token", secKey)
+	value, err := auth.ReadEncrypted(r, "refresh_token", secKey)
 	if err != nil {
-		ErrorJSON(w, err, http.StatusBadRequest)
+		helpers.ErrorJSON(w, err, http.StatusBadRequest)
 		return
 	}
 	// Validate the refresh token
-	validToken, err := validateToken(value)
+	validToken, err := auth.ValidateToken(value)
 	if err != nil {
-		ErrorJSON(w, err, http.StatusUnauthorized)
+		helpers.ErrorJSON(w, err, http.StatusUnauthorized)
 		return
 	}
 	// Access claims from the token
-	claims, ok := validToken.Claims.(*Claims)
+	claims, ok := validToken.Claims.(*auth.Claims)
 	if !ok {
-		ErrorJSON(w, err, http.StatusInternalServerError)
+		helpers.ErrorJSON(w, err, http.StatusInternalServerError)
 		return
 	}
 	// Check if the refresh token is expired
 	expiresAtUnix := claims.ExpiresAt.Time.Unix()
 	if time.Now().Unix() >= expiresAtUnix {
-		ErrorJSON(w, err, http.StatusUnauthorized)
+		helpers.ErrorJSON(w, err, http.StatusUnauthorized)
 		return
 	}
 	// Create a new access token
-	newAccessToken, err := createToken(claims.UserID, claims.Email, accessTokenExp)
+	newAccessToken, err := auth.CreateToken(claims.UserID, claims.Username, claims.Email, claims.Role, m.App.Auth.AccessTokenExp)
 	if err != nil {
-		ErrorJSON(w, err, http.StatusInternalServerError)
+		helpers.ErrorJSON(w, err, http.StatusInternalServerError)
 		return
 	}
 
@@ -129,9 +139,9 @@ func refreshTokenHandler(w http.ResponseWriter, r *http.Request) {
 		MaxAge:   3600,
 		SameSite: http.SameSiteLaxMode,
 	}
-	err = WriteEncrypted(w, NewAccTokenCookie, secKey)
+	err = auth.WriteEncrypted(w, NewAccTokenCookie, secKey)
 	if err != nil {
-		ErrorJSON(w, err, http.StatusInternalServerError)
+		helpers.ErrorJSON(w, err, http.StatusInternalServerError)
 		return
 	}
 	//// REDIRECT THE USER BACK TO THE ORIGINAL LINK
@@ -144,9 +154,14 @@ func refreshTokenHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // LOGOUT: handler for logging out by deleting all tokesn from cookies, and remove redis credentials
-func Logout(w http.ResponseWriter, r *http.Request) {
+func (m *Repository) Logout(w http.ResponseWriter, r *http.Request) {
 	// Create a new cookie with the same name as the one you want to delete
 	// and set its expiration time to a time in the past (e.g., one hour ago).
+	m.App.Auth.UserData.Email = ""
+	m.App.Auth.UserData.UserID = ""
+	m.App.Auth.UserData.Role = ""
+	m.App.Auth.UserData.Username = ""
+
 	deletedCookies := []http.Cookie{
 		{
 			Name:     "refresh_token",
@@ -169,4 +184,13 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 	}
 	// redirect the user
 	http.Redirect(w, r, "/", http.StatusFound)
+}
+
+func (m *Repository) Profile(w http.ResponseWriter, r *http.Request) { // protected/user
+	//// send all tokens in a json format to the UI
+	payload := helpers.JsonResponse{
+		Error:   false,
+		Message: fmt.Sprintf("Loggedin user of email %s and Username: %s", m.App.Auth.UserData.Email, m.App.Auth.UserData.Username),
+	}
+	helpers.WriteJSON(w, http.StatusAccepted, payload)
 }
