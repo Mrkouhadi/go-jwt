@@ -33,9 +33,9 @@ func Routes(app *config.Config) http.Handler {
 		w.Write([]byte("HOME PAGE"))
 	})
 	// authentication endpoints
-	r.Get("/login", handlers.Repo.RefreshTokenHandler) // get new access token using the refresh token
+	r.Get("/refresh-token", handlers.Repo.RefreshTokenHandler) // get new access token using the refresh token
 	r.Get("/logout", handlers.Repo.Logout)
-	r.Post("/generate-tokens", handlers.Repo.GenerateTokensHandler) // get 2 tokens: access + refresh
+	r.Post("/login", handlers.Repo.GenerateTokensHandler) // get 2 tokens: access + refresh
 	// protected routes
 	r.Route("/protected", func(mux chi.Router) {
 		mux.Use(Auth)

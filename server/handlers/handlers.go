@@ -20,12 +20,14 @@ func (m *Repository) GenerateTokensHandler(w http.ResponseWriter, r *http.Reques
 		helpers.ErrorJSON(w, err, http.StatusInternalServerError)
 		return
 	}
-	//// compare credentials against database data.
+
+	////
 	//
+	// compare credentials against database data.
 	//
-	//
-	//// if the credentials match what we have in the database we continue
-	//// Create an access token
+	////
+
+	// Create an access token
 	userid := "id_ftdrs42671hdcn" // get it from the database
 	username := "bryan kouhadi"
 	email := Person.Email
@@ -55,7 +57,7 @@ func (m *Repository) GenerateTokensHandler(w http.ResponseWriter, r *http.Reques
 			Name:     "access_token",
 			Value:    accessToken,
 			HttpOnly: true,
-			// Secure:   true,
+			Secure:   true,
 			Path:     "/",
 			MaxAge:   3600,
 			SameSite: http.SameSiteLaxMode,
@@ -64,12 +66,13 @@ func (m *Repository) GenerateTokensHandler(w http.ResponseWriter, r *http.Reques
 			Name:     "refresh_token",
 			Value:    refreshToken,
 			HttpOnly: true,
-			// Secure:   true,
+			Secure:   true,
 			Path:     "/",
 			MaxAge:   3600,
 			SameSite: http.SameSiteLaxMode,
 		},
 	}
+
 	// get the secret key
 	secKey, err := auth.GetSecKey()
 	if err != nil {
@@ -84,7 +87,6 @@ func (m *Repository) GenerateTokensHandler(w http.ResponseWriter, r *http.Reques
 			return
 		}
 	}
-	//// send all tokens in a json format to the UI
 	//// send all tokens in a json format to the UI
 	payload := helpers.JsonResponse{
 		Error:   false,
@@ -134,7 +136,7 @@ func (m *Repository) RefreshTokenHandler(w http.ResponseWriter, r *http.Request)
 		Name:     "access_token",
 		Value:    newAccessToken,
 		HttpOnly: true,
-		// Secure:   true,
+		Secure:   true,
 		Path:     "/",
 		MaxAge:   3600,
 		SameSite: http.SameSiteLaxMode,

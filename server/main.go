@@ -13,7 +13,7 @@ import (
 func main() {
 	app := config.Config{}
 	app.PortNumber = ":8080"
-	app.Auth.SecretKey = "Fd~+?/-S@c?re$t99~~!!~~8R-Fr5?>?" // very secret; u should use .env
+	app.Auth.SecretKey = "Fd~+?/-S@c?re$t19~~!!~~8R-Fr5?>?" // very secret; u should use .env
 	app.Auth.AccessTokenExp = time.Minute * 30              // 30 minutes
 	app.Auth.RefreshTokenExp = time.Hour * 24 * 7           // 7 days
 
