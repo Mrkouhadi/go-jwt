@@ -2,9 +2,9 @@ package main
 
 import (
 	"fmt"
-	"go-jwt/auth"
-	"go-jwt/config"
-	"go-jwt/handlers"
+	"go-jwt/internal/auth"
+	"go-jwt/internal/config"
+	"go-jwt/internal/handlers"
 	"log"
 	"net/http"
 	"time"

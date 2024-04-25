@@ -1,8 +1,8 @@
 package main
 
 import (
-	"go-jwt/config"
-	"go-jwt/handlers"
+	"go-jwt/internal/config"
+	"go-jwt/internal/handlers"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"

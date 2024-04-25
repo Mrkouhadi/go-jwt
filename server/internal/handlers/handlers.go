@@ -2,8 +2,8 @@ package handlers
 
 import (
 	"fmt"
-	"go-jwt/auth"
-	"go-jwt/helpers"
+	"go-jwt/internal/auth"
+	"go-jwt/internal/helpers"
 	"net/http"
 	"time"
 )
@@ -91,6 +91,7 @@ func (m *Repository) GenerateTokensHandler(w http.ResponseWriter, r *http.Reques
 	payload := helpers.JsonResponse{
 		Error:   false,
 		Message: fmt.Sprintf("Loggedin user of email %s and Username: %s", m.App.Auth.UserData.Email, m.App.Auth.UserData.Username),
+		Data:    m.App.Auth.UserData,
 	}
 	helpers.WriteJSON(w, http.StatusAccepted, payload)
 }
@@ -193,6 +194,7 @@ func (m *Repository) Profile(w http.ResponseWriter, r *http.Request) { // protec
 	payload := helpers.JsonResponse{
 		Error:   false,
 		Message: fmt.Sprintf("Loggedin user of email %s and Username: %s", m.App.Auth.UserData.Email, m.App.Auth.UserData.Username),
+		Data:    m.App.Auth.UserData,
 	}
 	helpers.WriteJSON(w, http.StatusAccepted, payload)
 }

@@ -1,6 +1,6 @@
 package handlers
 
-import "go-jwt/config"
+import "go-jwt/internal/config"
 
 // the repository used by the handlers
 var Repo *Repository

@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-	"go-jwt/auth"
-	"go-jwt/helpers"
+	"go-jwt/internal/auth"
+	"go-jwt/internal/helpers"
 	"log"
 	"net/http"
 	"net/url"
