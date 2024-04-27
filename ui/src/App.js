@@ -34,13 +34,16 @@ export default function Home() {
   return (
     <main className="flex h-screen flex-col items-center gap-12 p-12 bg-pink-400 text-black">
       {data ? (
-        <>
-          <p>email: {data.data.email}</p>
-          <p>username: {data.data.username}</p>
-          <p>role: {data.data.role}</p>
-        </>
+        <div className="details-box">
+          <p>EMAIL: <span>{data.data.email}</span></p>
+          <p>USERNAME: <span>{data.data.username}</span></p>
+          <p>ROLE: <span>{data.data.role}</span></p>
+          <button className="logout" onClick={()=>Logout(setData)}>Logout</button>
+        </div>
       ):
 <form onSubmit={handleSubmit}>
+  <div className="input-box">
+        <p className="">Email:</p>
       <input
         type="email"
         className={validity.email ? '' : 'invalid'}
@@ -49,10 +52,13 @@ export default function Home() {
         value={login.email}
         onChange={handleInputChange}
         required
-      />
+        />
       {!validity.email && (
-        <p className="invalid-message">Please enter a valid email address.</p>
-      )}
+        <p className="warning">Please enter a valid email address.</p>
+        )}
+        </div>
+        <div className="input-box">
+        <p className="">Password:</p>
       <input
         type="password"
         className={validity.password ? '' : 'invalid'}
@@ -63,14 +69,14 @@ export default function Home() {
         required
       />
       {!validity.password && (
-        <p className="invalid-message">
+        <p className="warning">
           Password must be at least 8 characters long.
         </p>
       )}
-      <button type="submit">Submit</button>
+      </div>
+      <button className="login" type="submit">Submit</button>
     </form>
     }
-      <button className="px-4 py-2 bg-red-400 text-white" onClick={()=>Logout(setData)}>Logout</button>
     </main>
   );
 }
