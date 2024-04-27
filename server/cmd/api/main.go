@@ -7,15 +7,20 @@ import (
 	"go-jwt/internal/handlers"
 	"log"
 	"net/http"
+	"os"
 	"time"
+
+	"github.com/joho/godotenv"
 )
 
 func main() {
 	app := config.Config{}
+	scretKey := goDotEnvVariable("SECRET_JWT_KEY")
+	app.Auth.SecretKey = scretKey // very secret
+
 	app.PortNumber = ":8080"
-	app.Auth.SecretKey = "Fd~+?/-S@c?re$t19~~!!~~8R-Fr5?>?" // very secret; u should use .env
-	app.Auth.AccessTokenExp = time.Minute * 30              // 30 minutes
-	app.Auth.RefreshTokenExp = time.Hour * 24 * 7           // 7 days
+	app.Auth.AccessTokenExp = time.Minute * 30    // 30 minutes
+	app.Auth.RefreshTokenExp = time.Hour * 24 * 7 // 7 days
 
 	// set up handlers
 	repo := handlers.NewRepo(&app)
@@ -31,11 +36,13 @@ func main() {
 	log.Fatal(srv.ListenAndServe())
 }
 
-// login link: http://localhost:8080/generate-tokens    POST
-// {
-//     "username":"bryan",
-//     "email":"bryan@kouhadi.com"
-// }
-// refresh the access token when it's expired: http://localhost:8080/refresh-token  GET
-// protected link:  http://localhost:8080/protected/user   GET
-// logout link: http://localhost:8080/logout  GET
+// goDotEnvVariable is a helper to get .env data
+func goDotEnvVariable(key string) string {
+	// load .env file
+	// if we have specific file names like this: system.env & others.env we can just do : godotenv.Load("system.env")
+	err := godotenv.Load(".env")
+	if err != nil {
+		log.Fatalf("Error loading .env file")
+	}
+	return os.Getenv(key)
+}
