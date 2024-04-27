@@ -7,9 +7,8 @@
 # INSTRUCTIONS:
 
 - add an .env file in `server` directory. ( add SECRET_JWT_KEY ="a 32 chars. example: 2a6F9d$%l1@#3s&u7x9A1C3E5G7I9K1M985s7m9U" )
-- To run the application: make all
-- To run only the frontend: make frontend
-- To run only the backend: make backend
+- To run the frontend: make frontend
+- To run the backend: make backend
 
 # SCREENSHOTS:
 

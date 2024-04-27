@@ -1,12 +1,9 @@
 .PHONY: frontend backend
 
-# Default target
-all: frontend backend
-
 # Frontend target
 frontend:
 	@echo "Building and running frontend..."
-	cd ui && npm start
+	cd ui && npm install && npm start
 
 # Backend target
 backend:
