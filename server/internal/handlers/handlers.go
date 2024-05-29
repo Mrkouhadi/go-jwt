@@ -8,9 +8,9 @@ import (
 	"time"
 )
 
-// generateTokensHandler represents LOGIN handler in real world scenario
-func (m *Repository) GenerateTokensHandler(w http.ResponseWriter, r *http.Request) {
-	//// Extract username from the request, validate credentials, etc. ////
+// Login represents LOGIN handler in real world scenario
+func (m *Repository) Login(w http.ResponseWriter, r *http.Request) {
+	//// Extract username from the request, validate credentials, etc.
 	var Person struct {
 		Email    string `json:"email"`
 		Password string `json:"password"`
@@ -20,6 +20,17 @@ func (m *Repository) GenerateTokensHandler(w http.ResponseWriter, r *http.Reques
 		helpers.ErrorJSON(w, err, http.StatusInternalServerError)
 		return
 	}
+	validatedEmail, err := helpers.ValidateAndSanitizeEmail(Person.Email)
+	if err != nil {
+		helpers.ErrorJSON(w, err, http.StatusInternalServerError)
+		return
+	}
+	validatedPassword, err := helpers.ValidateAndSanitizePassword(Person.Password)
+	if err != nil {
+		helpers.ErrorJSON(w, err, http.StatusInternalServerError)
+		return
+	}
+	fmt.Println("Password: ", validatedPassword) // TODO: delete it later
 
 	////
 	//
@@ -30,7 +41,7 @@ func (m *Repository) GenerateTokensHandler(w http.ResponseWriter, r *http.Reques
 	// Create an access token
 	userid := "id_ftdrs42671hdcn" // get it from the database
 	username := "bryan kouhadi"
-	email := Person.Email
+	email := validatedEmail
 	role := "user"
 	accessToken, err := auth.CreateToken(userid, username, email, role, m.App.Auth.AccessTokenExp)
 	if err != nil {
@@ -38,7 +49,7 @@ func (m *Repository) GenerateTokensHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 	// persist data in memory
-	m.App.Auth.UserData.Email = Person.Email
+	m.App.Auth.UserData.Email = validatedEmail
 	m.App.Auth.UserData.UserID = userid
 	m.App.Auth.UserData.Role = role
 	m.App.Auth.UserData.Username = username
@@ -73,15 +84,9 @@ func (m *Repository) GenerateTokensHandler(w http.ResponseWriter, r *http.Reques
 		},
 	}
 
-	// get the secret key
-	secKey, err := auth.GetSecKey()
-	if err != nil {
-		helpers.ErrorJSON(w, err, http.StatusInternalServerError)
-		return
-	}
 	// Set each cookie
 	for _, cookie := range cookies {
-		err := auth.WriteEncrypted(w, cookie, secKey)
+		err := auth.WriteEncrypted(w, cookie, m.App.Auth.AesSecretKey)
 		if err != nil {
 			helpers.ErrorJSON(w, err, http.StatusInternalServerError)
 			return
@@ -90,7 +95,7 @@ func (m *Repository) GenerateTokensHandler(w http.ResponseWriter, r *http.Reques
 	//// send all tokens in a json format to the UI
 	payload := helpers.JsonResponse{
 		Error:   false,
-		Message: fmt.Sprintf("Loggedin user of email %s and Username: %s", m.App.Auth.UserData.Email, m.App.Auth.UserData.Username),
+		Message: fmt.Sprintf("Logged in user of email %s and Username: %s", m.App.Auth.UserData.Email, m.App.Auth.UserData.Username),
 		Data:    m.App.Auth.UserData,
 	}
 	helpers.WriteJSON(w, http.StatusAccepted, payload)
@@ -98,11 +103,7 @@ func (m *Repository) GenerateTokensHandler(w http.ResponseWriter, r *http.Reques
 
 // RefreshTokenHandler refreshes the raccess token
 func (m *Repository) RefreshTokenHandler(w http.ResponseWriter, r *http.Request) {
-	secKey, err := auth.GetSecKey()
-	if err != nil {
-		helpers.ErrorJSON(w, err, http.StatusBadRequest)
-	}
-	value, err := auth.ReadEncrypted(r, "refresh_token", secKey)
+	value, err := auth.ReadEncrypted(r, "refresh_token", m.App.Auth.AesSecretKey)
 	if err != nil {
 		helpers.ErrorJSON(w, err, http.StatusBadRequest)
 		return
@@ -142,7 +143,7 @@ func (m *Repository) RefreshTokenHandler(w http.ResponseWriter, r *http.Request)
 		MaxAge:   3600,
 		SameSite: http.SameSiteLaxMode,
 	}
-	err = auth.WriteEncrypted(w, NewAccTokenCookie, secKey)
+	err = auth.WriteEncrypted(w, NewAccTokenCookie, m.App.Auth.AesSecretKey)
 	if err != nil {
 		helpers.ErrorJSON(w, err, http.StatusInternalServerError)
 		return

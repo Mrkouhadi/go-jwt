@@ -5,7 +5,6 @@ import (
 	"crypto/cipher"
 	"crypto/rand"
 	"encoding/base64"
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"io"
@@ -20,14 +19,8 @@ var (
 	ErrInvalidValue = errors.New("invalid cookie value")
 )
 
-func GetSecKey() ([]byte, error) {
-	secKey, err := hex.DecodeString("13d6b4dff8f84a10851021ec8608f814570d562c92fe6b5ec4c9f595bcb3234b")
-	if err != nil {
-		return nil, err
-	}
-	return secKey, nil
-}
 func WriteEncrypted(w http.ResponseWriter, cookie http.Cookie, secretKey []byte) error {
+
 	// Create a new AES cipher block from the secret key.
 	block, err := aes.NewCipher(secretKey)
 	if err != nil {
@@ -180,7 +173,7 @@ cookies := []http.Cookie{
 	},
 }
 
-secKey, err := getSecKey()
+secKey, err := app.Auth.AesSecretKey()
 if err != nil {
 	log.Fatal(err)
 }
@@ -197,7 +190,7 @@ for _, cookie := range cookies {
 
 // READING COOKIES
 	// extracting the refresh token from the cookie(httpOnly cookie)
-	secKey, err := getSecKey()
+	secKey, err := app.Auth.AesSecretKey()
 	if err != nil {
 		log.Fatal(err)
 	}

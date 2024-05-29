@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"go-jwt/internal/auth"
 	"go-jwt/internal/helpers"
-	"log"
 	"net/http"
 	"net/url"
 	"time"
@@ -13,11 +12,7 @@ import (
 func Auth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		//// read the cookies data
-		secKey, err := auth.GetSecKey()
-		if err != nil {
-			log.Fatal(err)
-		}
-		value, err := auth.ReadEncrypted(r, "access_token", secKey)
+		value, err := auth.ReadEncrypted(r, "access_token", app.Auth.AesSecretKey)
 		if err != nil {
 			helpers.ErrorJSON(w, err, http.StatusUnauthorized)
 			return

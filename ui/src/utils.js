@@ -13,12 +13,12 @@ export  async function Login(email,password,setData) {
      },
    });
    if (!res.ok) {
-     throw new Error("Failed to fetch data");
-   }
+    throw new Error(`Error fetching Loggin a user: ${res.status} ${res.statusText}`);
+  }
    const jsonData = await res.json();
    setData(jsonData);
  } catch (error) {
-   console.error("Error fetching data:", error);
+   console.error("Error Loggin a user: ", error);
  }
 }
 
@@ -27,10 +27,10 @@ export async function Logout(setData){
     try {
       const res = await fetch("/logout",{method:"GET"});
       if (!res.ok) {
-        throw new Error("Failed to fetch data");
+        throw new Error(`Failed to log out a user: ${res.status} ${res.statusText}`);
       }
       setData(null);
     } catch (error) {
-      console.error("Error refreshing token:", error);
+      console.error("Error Logging out: ", error);
     }
   }
