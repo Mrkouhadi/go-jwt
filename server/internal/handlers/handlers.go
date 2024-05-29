@@ -30,11 +30,12 @@ func (m *Repository) Login(w http.ResponseWriter, r *http.Request) {
 		helpers.ErrorJSON(w, err, http.StatusInternalServerError)
 		return
 	}
-	fmt.Println("Password: ", validatedPassword) // TODO: delete it later
+
+	fmt.Println("Sanitized and Validated Password: ", validatedPassword)
 
 	////
 	//
-	// compare credentials against database data.
+	//  TODO: compare credentials against database data.
 	//
 	////
 
@@ -165,7 +166,6 @@ func (m *Repository) Logout(w http.ResponseWriter, r *http.Request) {
 	m.App.Auth.UserData.UserID = ""
 	m.App.Auth.UserData.Role = ""
 	m.App.Auth.UserData.Username = ""
-
 	deletedCookies := []http.Cookie{
 		{
 			Name:     "refresh_token",
@@ -190,11 +190,12 @@ func (m *Repository) Logout(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/", http.StatusFound)
 }
 
+// Profile is a protected handler shoing the details of the logged user
 func (m *Repository) Profile(w http.ResponseWriter, r *http.Request) { // protected/user
 	//// send all tokens in a json format to the UI
 	payload := helpers.JsonResponse{
 		Error:   false,
-		Message: fmt.Sprintf("Loggedin user of email %s and Username: %s", m.App.Auth.UserData.Email, m.App.Auth.UserData.Username),
+		Message: fmt.Sprintf("Logged in user of email %s and Username: %s", m.App.Auth.UserData.Email, m.App.Auth.UserData.Username),
 		Data:    m.App.Auth.UserData,
 	}
 	helpers.WriteJSON(w, http.StatusAccepted, payload)

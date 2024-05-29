@@ -1,5 +1,4 @@
-
-// logging in the user
+// Logging in the user:
 export  async function Login(email,password,setData) {
  try {
    const res = await fetch("/login", {
@@ -21,11 +20,23 @@ export  async function Login(email,password,setData) {
    console.error("Error Loggin a user: ", error);
  }
 }
-
-// logging out the user
+// getting logged in user data
+export async function GetProfileData(setData){
+  try {
+    const res = await fetch("/protected/profile", {method:"GET"});
+    if (!res.ok) {
+      throw new Error(`Failed to fetch data of a logged in user: ${res.status} ${res.statusText}`);
+    }
+    const jsonData = await res.json();
+    setData(jsonData);
+  } catch (error) {
+    console.error("Error getting profile data ", error);
+  }
+}
+// Logging out the user:
 export async function Logout(setData){
     try {
-      const res = await fetch("/logout",{method:"GET"});
+      const res = await fetch("/logout", {method:"GET"});
       if (!res.ok) {
         throw new Error(`Failed to log out a user: ${res.status} ${res.statusText}`);
       }
@@ -33,4 +44,4 @@ export async function Logout(setData){
     } catch (error) {
       console.error("Error Logging out: ", error);
     }
-  }
+}

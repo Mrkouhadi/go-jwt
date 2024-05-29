@@ -1,4 +1,5 @@
 import { useState } from "react";
+import Profile from "./components/Profile";
 import { Login, Logout } from "./utils";
 
 export default function Home() {
@@ -34,12 +35,9 @@ export default function Home() {
   return (
     <main className="flex h-screen flex-col items-center gap-12 p-12 bg-pink-400 text-black">
       {data ? (
-        <div className="details-box">
-          <p>EMAIL: <span>{data.data.email}</span></p>
-          <p>USERNAME: <span>{data.data.username}</span></p>
-          <p>ROLE: <span>{data.data.role}</span></p>
-          <button className="logout" onClick={()=>Logout(setData)}>Logout</button>
-        </div>
+        <>
+        <Profile toLogout={()=>Logout(setData)} email={data.data.email} username={data.data.username} role={data.data.role} />
+        </>
       ):
 <form onSubmit={handleSubmit}>
   <div className="input-box">

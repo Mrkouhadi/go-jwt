@@ -11,7 +11,6 @@ import (
 )
 
 func Routes(app *config.Config) http.Handler {
-
 	r := chi.NewRouter()
 	// A good base middleware stack
 	r.Use(middleware.RequestID)
