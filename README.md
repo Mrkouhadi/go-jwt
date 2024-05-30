@@ -6,7 +6,7 @@
 
 # INSTRUCTIONS:
 
-- add an .env file in `server` directory and add: SECRET_JWT_KEY="your secret key" & AES_SECRECT_KEY="Your secret key"
+- Add an .env file in `server` directory and add: SECRET_JWT_KEY="your secret key" & AES_SECRECT_KEY="Your secret key"
 - To run the frontend: make frontend
 - To run the backend: make backend
 
