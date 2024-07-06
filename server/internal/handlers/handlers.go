@@ -49,11 +49,6 @@ func (m *Repository) Login(w http.ResponseWriter, r *http.Request) {
 		helpers.ErrorJSON(w, err, http.StatusInternalServerError)
 		return
 	}
-	// persist data in memory
-	m.App.Auth.UserData.Email = validatedEmail
-	m.App.Auth.UserData.UserID = userid
-	m.App.Auth.UserData.Role = role
-	m.App.Auth.UserData.Username = username
 
 	//// Create a refresh token
 	refreshToken, err := auth.CreateToken(userid, username, email, role, m.App.Auth.RefreshTokenExp)
@@ -96,8 +91,8 @@ func (m *Repository) Login(w http.ResponseWriter, r *http.Request) {
 	//// send all tokens in a json format to the UI
 	payload := helpers.JsonResponse{
 		Error:   false,
-		Message: fmt.Sprintf("Logged in user of email %s and Username: %s", m.App.Auth.UserData.Email, m.App.Auth.UserData.Username),
-		Data:    m.App.Auth.UserData,
+		Message: "Logged in successfully",
+		Data:    struct{ userid, username string }{username, userid},
 	}
 	helpers.WriteJSON(w, http.StatusAccepted, payload)
 }
@@ -162,10 +157,6 @@ func (m *Repository) RefreshTokenHandler(w http.ResponseWriter, r *http.Request)
 func (m *Repository) Logout(w http.ResponseWriter, r *http.Request) {
 	// Create a new cookie with the same name as the one you want to delete
 	// and set its expiration time to a time in the past (e.g., one hour ago).
-	m.App.Auth.UserData.Email = ""
-	m.App.Auth.UserData.UserID = ""
-	m.App.Auth.UserData.Role = ""
-	m.App.Auth.UserData.Username = ""
 	deletedCookies := []http.Cookie{
 		{
 			Name:     "refresh_token",
@@ -195,8 +186,7 @@ func (m *Repository) Profile(w http.ResponseWriter, r *http.Request) { // protec
 	//// send all tokens in a json format to the UI
 	payload := helpers.JsonResponse{
 		Error:   false,
-		Message: fmt.Sprintf("Logged in user of email %s and Username: %s", m.App.Auth.UserData.Email, m.App.Auth.UserData.Username),
-		Data:    m.App.Auth.UserData,
+		Message: "You are Allowed here",
 	}
 	helpers.WriteJSON(w, http.StatusAccepted, payload)
 }
