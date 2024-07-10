@@ -161,14 +161,14 @@ func (m *Repository) Logout(w http.ResponseWriter, r *http.Request) {
 		{
 			Name:     "refresh_token",
 			Value:    "", // Setting the value to empty is optional but recommended
-			Expires:  time.Now().Add(-time.Hour),
+			Expires:  time.Unix(0, 0),
 			HttpOnly: true, // Set other cookie attributes as needed
 			Path:     "/",  // Set the cookie's path
 		},
 		{
 			Name:     "access_token",
 			Value:    "", // Setting the value to empty is optional but recommended
-			Expires:  time.Now().Add(-time.Hour),
+			Expires:  time.Unix(0, 0),
 			HttpOnly: true, // Set other cookie attributes as needed
 			Path:     "/",  // Set the cookie's path
 		},
